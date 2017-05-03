@@ -1,0 +1,118 @@
+#!/bin/bash
+
+
+ORIGINAL_SSH=$(which ssh)
+DATA_PATH="$HOME/.sshm"
+DATA_FILE="$HOME/.sshm/.data"
+CACHE_FILE="$HOME/.sshm/.data_cache"
+
+function help()
+{
+  echo "
+Usage:
+  sshm options
+
+Options:
+  -h|--help                     Display help message
+  -l|--list                     List all ssh bookmarks
+  -c|--connect host             Connect to a host
+  "
+  exit
+}
+
+function parse_options()
+{
+  while :; do
+    case $1 in
+      -h|-\?|--help)
+        command='help'
+        break
+        ;;
+      -l|--list)
+        command='list'
+        break
+        ;;
+      -c|--connect)
+        command='connect'
+        if [[ -n $2 ]]; then
+          host=$2
+          break
+        else
+          help
+        fi
+        ;;
+      *)
+        break
+    esac
+  done
+}
+
+function list()
+{
+  if [[ ! -d "$DATA_PATH" ]]; then
+    echo "$DATA_PATH doesn't exist."
+    exit 2
+  fi
+
+  if [[ ! -e $DATA_FILE ]]; then
+    echo "$DATA_FILE doesn't exist"
+    exit 1
+  fi
+
+  update_cache_file
+  awk '{printf "[%s] => ", FNR} {for(i=2; i<=NF; i++) printf "%s ", $i} {print ""}' $CACHE_FILE
+}
+
+function connect()
+{
+  if [[ -z $host ]]; then
+    echo "You didn't specific which host to connect"
+    help
+  fi
+
+  if [[ ! "$host" -gt 0 ]]; then
+    echo "The host is not a number"
+    help
+  fi
+
+  if [[ ! -e $CACHE_FILE ]]; then
+    echo "The cache file $CACHE_FILE doesn't exist, maybe you should run sshm -l first."
+    exit 2
+  fi
+
+  server=$(sed -n "$host p" $CACHE_FILE | awk '{for(i=2; i<=NF; i++) printf "%s ", $i} {print ""}')
+  if [[ $? -ne 0 ]]; then
+    echo "The host you specific doesn't exist."
+    exit 5
+  fi
+
+  ssh $server
+}
+
+function update_cache_file()
+{
+  if [[ ! -d $DATA_PATH ]]; then
+    echo "$DATA_PATH doesn't exist."
+    exit 1
+  fi
+
+  if [[ ! -e $DATA_FILE ]]; then
+    echo "$DATA_FILE doesn't exist"
+    exit 1
+  fi
+
+  awk '{data[$0]++} END{for(d in data) print data[d],d}' $DATA_FILE | sort -k1 -r > $CACHE_FILE
+}
+
+function ssh() {
+  echo "ssh to $server"
+  $ORIGINAL_SSH "$@" && echo "$@" >> $DATA_FILE
+}
+
+parse_options "$@"
+
+if [[ -z $command ]]; then
+  help
+fi
+
+$command
