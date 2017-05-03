@@ -6,12 +6,21 @@ Just put sshm into `/usr/local/bin` or somewhere else.
 
 Run commands below to init:
 
-```bash
+```shell
 mkdir ~/.sshm
 touch ~/.sshm/.data
 ```
 
+And add the follow lines to ~/.bashrc or any other shell's rc file:
+```shell
+ssh() {
+  /usr/bin/ssh "$@" && echo "$@" >> ~/.sshm/.data
+}
+```
+
+Source the rc file or logout/login to make these lines activated.
+
 That's all.
 
 # Usage
-Run `sshm` and it will give you some help messages.
+Run `sshm` and it will show you enough help messages.

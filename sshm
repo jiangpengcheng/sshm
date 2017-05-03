@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 ORIGINAL_SSH=$(which ssh)
 DATA_PATH="$HOME/.sshm"
 DATA_FILE="$HOME/.sshm/.data"
@@ -15,7 +14,8 @@ Usage:
 Options:
   -h|--help                     Display help message
   -l|--list                     List all ssh bookmarks
-  -c|--connect host             Connect to a host
+  -c|--connect host             Connect to a host, where host is the index number of
+                                hosts shown by 'sshm -l'
   "
   exit
 }
@@ -71,7 +71,7 @@ function connect()
   fi
 
   if [[ ! "$host" -gt 0 ]]; then
-    echo "The host is not a number"
+    echo "The host index must be a number"
     help
   fi
 
@@ -93,11 +93,13 @@ function update_cache_file()
 {
   if [[ ! -d $DATA_PATH ]]; then
     echo "$DATA_PATH doesn't exist."
+    mkdir -p $DATA_PATH
     exit 1
   fi
 
   if [[ ! -e $DATA_FILE ]]; then
     echo "$DATA_FILE doesn't exist"
+    touch $DATA_FILE
     exit 1
   fi
 
