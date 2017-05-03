@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -o errexit
+
+DATA_FILE="$HOME/.sshm/.data"
+
+function update_data_file()
+{
+  count=$(sed -n "/[[:digit:]] $1$/p" $DATA_FILE | awk '{print $1}')
+  if [[ -z $count ]]; then
+    echo "1 $1" >> $DATA_FILE
+  else
+    count=$(expr $count + 1)
+    sed -i "s/[[:digit:]] $1$/$count $1/g" $DATA_FILE
+  fi
+}
+
+if [[ -n $1 ]]; then
+  update_data_file "$*"
+else
+  echo "You need transfer an argument to this script."
+fi

@@ -2,7 +2,7 @@
 A simple SSH bookmarks script that help remember the history of ssh command.
 
 # Install
-Just put sshm into `/usr/local/bin` or somewhere else.
+Just put sshm and sshm-update into `/usr/local/bin` or somewhere else.
 
 Run commands below to init:
 
@@ -14,7 +14,7 @@ touch ~/.sshm/.data
 And add the follow lines to ~/.bashrc or any other shell's rc file:
 ```shell
 ssh() {
-  /usr/bin/ssh "$@" && echo "$@" >> ~/.sshm/.data
+  /usr/bin/ssh "$@" && sshm-update "$*"
 }
 ```
 

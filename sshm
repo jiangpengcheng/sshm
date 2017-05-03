@@ -1,9 +1,10 @@
 #!/bin/bash
 
+set -o errexit
+
 ORIGINAL_SSH=$(which ssh)
 DATA_PATH="$HOME/.sshm"
 DATA_FILE="$HOME/.sshm/.data"
-CACHE_FILE="$HOME/.sshm/.data_cache"
 
 function help()
 {
@@ -59,8 +60,7 @@ function list()
     touch $DATA_FILE
   fi
 
-  update_cache_file
-  awk '{printf "[%s] => ", FNR} {for(i=2; i<=NF; i++) printf "%s ", $i} {print ""}' $CACHE_FILE
+  awk '{printf "[%s] => ", FNR} {for(i=2; i<=NF; i++) printf "%s ", $i} {print ""}' $DATA_FILE
 }
 
 function connect()
@@ -71,17 +71,17 @@ function connect()
   fi
 
   if [[ ! "$host" -gt 0 ]]; then
-    echo "The host index must be a number"
+    echo "The host index must be a positive number"
     help
   fi
 
-  if [[ ! -e $CACHE_FILE ]]; then
-    echo "The cache file $CACHE_FILE doesn't exist, maybe you should run sshm -l first."
+  if [[ ! -e $DATA_FILE ]]; then
+    echo "The data file $DATA_FILE doesn't exist, maybe you should run sshm -l first."
     exit 1
   fi
 
-  server=$(sed -n "$host p" $CACHE_FILE | awk '{for(i=2; i<=NF; i++) printf "%s ", $i} {print ""}')
-  if [[ $? -ne 0 ]]; then
+  server=$(sed -n "$host p" $DATA_FILE | awk '{for(i=2; i<=NF; i++) printf "%s ", $i} {print ""}')
+  if [[ -z $server ]]; then
     echo "The host you specific doesn't exist."
     exit 1
   fi
@@ -89,24 +89,20 @@ function connect()
   ssh $server
 }
 
-function update_cache_file()
-{
-  if [[ ! -d $DATA_PATH ]]; then
-    echo "$DATA_PATH doesn't exist."
-    mkdir -p $DATA_PATH
-  fi
-
-  if [[ ! -e $DATA_FILE ]]; then
-    echo "$DATA_FILE doesn't exist"
-    touch $DATA_FILE
-  fi
-
-  awk '{data[$0]++} END{for(d in data) print data[d],d}' $DATA_FILE | sort -k1 -r > $CACHE_FILE
-}
-
 function ssh() {
   echo "ssh to $server"
-  $ORIGINAL_SSH "$@" && echo "$@" >> $DATA_FILE
+  $ORIGINAL_SSH "$@" && update_data_file "$*"
+}
+
+function update_data_file()
+{
+  count=$(sed -n "/[[:digit:]] $1$/p" $DATA_FILE | awk '{print $1}')
+  if [[ -z $count ]]; then
+    echo "1 $1" >> $DATA_FILE
+  else
+    count=$(expr $count + 1)
+    sed -i "s/[[:digit:]] $1$/$count $1/g" $DATA_FILE
+  fi
 }
 
 parse_options "$@"
