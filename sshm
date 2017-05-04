@@ -4,7 +4,8 @@ set -o errexit
 
 ORIGINAL_SSH=$(which ssh)
 DATA_PATH="$HOME/.sshm"
-DATA_FILE="$HOME/.sshm/.data"
+DATA_FILE="$DATA_PATH/.data"
+DATA_CACHE_FILE="$DATA_PATH/.data.cache"
 
 function help()
 {
@@ -61,6 +62,9 @@ function list()
   fi
 
   awk '{printf "[%s] => ", FNR} {for(i=3; i<=NF; i++) printf "%s ", $i} {print ""}' $DATA_FILE
+
+  # Update the cache file
+  cp $DATA_FILE $DATA_CACHE_FILE
 }
 
 function connect()
@@ -80,7 +84,15 @@ function connect()
     exit 1
   fi
 
-  server=$(sed -n "$host p" $DATA_FILE | awk '{for(i=3; i<=NF; i++) printf "%s ", $i} {print ""}')
+  if [[ -e $DATA_CACHE_FILE ]]; then
+    temp=$DATA_CACHE_FILE
+  else
+    temp=$DATA_FILE
+  fi
+
+  # Use a cache file to find the wanted server.save the latest result of sshm -l, so user won't miss the host
+  # index argument caused by the update of DATA_FILE.
+  server=$(sed -n "$host p" $temp | awk '{for(i=3; i<=NF; i++) printf "%s ", $i} {print ""}')
   if [[ -z $server ]]; then
     echo "The host you specific doesn't exist."
     exit 1
