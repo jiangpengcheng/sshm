@@ -2,18 +2,32 @@
 
 set -o errexit
 
+DATA_PATH="$HOME/.sshm"
 DATA_FILE="$HOME/.sshm/.data"
 
 function update_data_file()
 {
-  count=$(sed -n "/[[:digit:]] $1$/p" $DATA_FILE | awk '{print $1}')
+  now=$(date +%s)
+  count=$(sed -n "/[[:digit:]] [[:digit:]] $1$/p" $DATA_FILE | awk '{print $2}')
   if [[ -z $count ]]; then
-    echo "1 $1" >> $DATA_FILE
+    echo "$now 1 $1" >> $DATA_FILE
   else
     count=$(expr $count + 1)
-    sed -i "s/[[:digit:]] $1$/$count $1/g" $DATA_FILE
+    sed -ri "s/^[[:digit:]]+ [[:digit:]]+ $1$/$now $count $1/g" $DATA_FILE
+    sort -nr $DATA_FILE -o $DATA_FILE
   fi
 }
+
+
+if [[ ! -d "$DATA_PATH" ]]; then
+  echo "$DATA_PATH doesn't exist."
+  mkdir -p $DATA_PATH
+fi
+
+if [[ ! -e $DATA_FILE ]]; then
+  echo "$DATA_FILE doesn't exist"
+  touch $DATA_FILE
+fi
 
 if [[ -n $1 ]]; then
   update_data_file "$*"

@@ -60,7 +60,7 @@ function list()
     touch $DATA_FILE
   fi
 
-  awk '{printf "[%s] => ", FNR} {for(i=2; i<=NF; i++) printf "%s ", $i} {print ""}' $DATA_FILE
+  awk '{printf "[%s] => ", FNR} {for(i=3; i<=NF; i++) printf "%s ", $i} {print ""}' $DATA_FILE
 }
 
 function connect()
@@ -80,7 +80,7 @@ function connect()
     exit 1
   fi
 
-  server=$(sed -n "$host p" $DATA_FILE | awk '{for(i=2; i<=NF; i++) printf "%s ", $i} {print ""}')
+  server=$(sed -n "$host p" $DATA_FILE | awk '{for(i=3; i<=NF; i++) printf "%s ", $i} {print ""}')
   if [[ -z $server ]]; then
     echo "The host you specific doesn't exist."
     exit 1
@@ -91,18 +91,7 @@ function connect()
 
 function ssh() {
   echo "ssh to $server"
-  $ORIGINAL_SSH "$@" && update_data_file "$*"
-}
-
-function update_data_file()
-{
-  count=$(sed -n "/[[:digit:]] $1$/p" $DATA_FILE | awk '{print $1}')
-  if [[ -z $count ]]; then
-    echo "1 $1" >> $DATA_FILE
-  else
-    count=$(expr $count + 1)
-    sed -i "s/[[:digit:]] $1$/$count $1/g" $DATA_FILE
-  fi
+  $ORIGINAL_SSH "$@" && sshm-update "$*"
 }
 
 parse_options "$@"
