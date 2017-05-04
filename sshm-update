@@ -3,7 +3,7 @@
 set -o errexit
 
 DATA_PATH="$HOME/.sshm"
-DATA_FILE="$HOME/.sshm/.data"
+DATA_FILE="$DATA_PATH/.data"
 
 function update_data_file()
 {

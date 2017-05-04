@@ -90,8 +90,8 @@ function connect()
     temp=$DATA_FILE
   fi
 
-  # Use a cache file to find the wanted server.save the latest result of sshm -l, so user won't miss the host
-  # index argument caused by the update of DATA_FILE.
+  # Use a cache file, which saves the latest result of sshm -l, to locate the wanted server,
+  # so user won't miss the host index argument caused by the update of DATA_FILE.
   server=$(sed -n "$host p" $temp | awk '{for(i=3; i<=NF; i++) printf "%s ", $i} {print ""}')
   if [[ -z $server ]]; then
     echo "The host you specific doesn't exist."
