@@ -98,10 +98,10 @@ function connect()
     exit 1
   fi
 
-  ssh $server
+  ssh-connect $server
 }
 
-function ssh() {
+function ssh-connect() {
   echo "ssh to $server"
   $ORIGINAL_SSH "$@" && sshm-update "$*"
 }

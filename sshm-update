@@ -14,8 +14,8 @@ function update_data_file()
   else
     count=$(expr $count + 1)
     sed -ri "s/^[[:digit:]]+ [[:digit:]]+ $1$/$now $count $1/g" $DATA_FILE
-    sort -nr $DATA_FILE -o $DATA_FILE
   fi
+  sort -nr $DATA_FILE -o $DATA_FILE
 }
 
 
