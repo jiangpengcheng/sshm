@@ -3,16 +3,18 @@
 set -o errexit
 
 DATA_PATH="$HOME/.sshm"
-DATA_FILE="$DATA_PATH/.data"
+DATA_FILE="$HOME/.sshm/.data"
 
 function update_data_file()
 {
   now=$(date +%s)
-  count=$(sed -n "/[[:digit:]] [[:digit:]] $1$/p" $DATA_FILE | awk '{print $2}')
+  count=$(sed -rn "/^[[:digit:]]+ [[:digit:]]+ $1$/p" $DATA_FILE | awk '{print $2}')
   if [[ -z $count ]]; then
+    echo "This is the first time you login to $1" >> /tmp/sshm.log
     echo "$now 1 $1" >> $DATA_FILE
   else
     count=$(expr $count + 1)
+    echo "This is the $count time you login to $1" >> /tmp/sshm.log
     sed -ri "s/^[[:digit:]]+ [[:digit:]]+ $1$/$now $count $1/g" $DATA_FILE
   fi
   sort -nr $DATA_FILE -o $DATA_FILE
@@ -32,5 +34,5 @@ fi
 if [[ -n $1 ]]; then
   update_data_file "$*"
 else
-  echo "You need transfer an argument to this script."
+  echo "You need transfer an argument to this script." >> /tmp/sshm.log
 fi
